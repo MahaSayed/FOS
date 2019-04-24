@@ -263,6 +263,8 @@ void boot_map_range(uint32 *ptr_page_directory, uint32 virtual_address, uint32 s
 	}
 }
 
+
+
 //
 // Given ptr_page_directory, a pointer to a page directory,
 // traverse the 2-level page table structure to find
@@ -535,22 +537,39 @@ int get_page_table(uint32 *ptr_page_directory, const void *virtual_address, uint
 
 void * create_page_table(uint32 *ptr_page_directory, const uint32 virtual_address)
 {
-	//TODO: [PROJECT 2019 - MS1 - [2] Kernel Dynamic Allocation] create_page_table()
-	// Write your code here, remove the panic and write your code
-	panic("create_page_table() is not implemented yet...!!");
-
 	//Use kmalloc() to create a new page TABLE for the given virtual address,
 	//link it to the given directory and return the address of the created table
 	//REMEMBER TO:
 	//	a.	clear all entries (as it may contain garbage data)
 	//	b.	clear the TLB cache (using "tlbflush()")
 
-	//change this "return" according to your answer
+	// allocating new virtual address
+	uint32* NewAddress = kmalloc(PAGE_SIZE);
+	if(NewAddress == NULL)
+	{
+		panic("No enough memory");
+	}
+	int kilo = 1024;
 
-	return 0;
+	// to get the physical address of this virtual address use kheap_physical_address
+	uint32 Physical_Address = (uint32)(kheap_physical_address((uint32)NewAddress));
+
+	uint32 frame_number = Physical_Address/PAGE_SIZE;
+
+	ptr_page_directory[PDX(virtual_address)] = ((frame_number << 12)|PERM_USER|PERM_WRITEABLE|PERM_PRESENT);
+
+	//to clear all the entries as it may contain garbage
+	for(int i=0; i<kilo; i++)
+	{
+		NewAddress[i] = 0;
+	}
+
+	//clear the cache
+	tlbflush();
+
+	//returns the new address of the created table
+	return (void *)NewAddress;
 }
-
-
 
 void __static_cpt(uint32 *ptr_page_directory, const uint32 virtual_address, uint32 **ptr_page_table)
 {
