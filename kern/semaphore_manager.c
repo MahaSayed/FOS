@@ -154,11 +154,13 @@ int free_semaphore_object(uint32 semaphoreObjectID)
 //======================
 // [1] Create Semaphore:
 //======================
+struct Semaphore *NewSemaphore;
+
 int createSemaphore(int32 ownerEnvID, char* semaphoreName, uint32 initialValue)
 {
 	//TODO: [PROJECT 2019 - MS1 - [4] Semaphore] CreateSemaphore
 	// your code is here, remove the panic and write your code
-	panic("createSemaphore() is not implemented yet...!!");
+	//panic("createSemaphore() is not implemented yet...!!");
 
 	//create new semaphore object and initialize it by the given info (ownerID, name, value)
 	//Return:
@@ -166,18 +168,32 @@ int createSemaphore(int32 ownerEnvID, char* semaphoreName, uint32 initialValue)
 	//	b) E_SEMAPHORE_EXISTS if the semaphore is already exists
 	//	c) E_NO_SEMAPHORE if the the array of semaphores is full
 
+	if(get_semaphore_object_ID(ownerEnvID, semaphoreName) != E_SEMAPHORE_NOT_EXISTS)
+	{
+		return E_SEMAPHORE_EXISTS;
+	}
+
+	int ret = allocate_semaphore_object(&NewSemaphore);
+	if(ret != E_NO_SEMAPHORE)
+	{
+		semaphores[ret].empty = 0;
+		strcpy(semaphores[ret].name, semaphoreName);
+		semaphores[ret].value = initialValue;
+		semaphores[ret].ownerID = ownerEnvID;
+	}
+	return ret;
+
 	//change this "return" according to your answer
-	return 0;
 }
 
-//============
+//=== =========
 // [2] Wait():
 //============
 void waitSemaphore(int32 ownerEnvID, char* semaphoreName)
 {
 	//TODO: [PROJECT 2019 - MS1 - [4] Semaphore] WAIT
 	// your code is here, remove the panic and write your code
-	panic("waitSemaphore() is not implemented yet...!!");
+	//panic("waitSemaphore() is not implemented yet...!!");
 
 	struct Env* myenv = curenv; //The calling environment
 
@@ -191,6 +207,7 @@ void waitSemaphore(int32 ownerEnvID, char* semaphoreName)
 	//		d) set curenv with NULL
 	//	4) Call "fos_scheduler()" to continue running the remaining envs
 
+
 }
 
 //==============
@@ -200,7 +217,7 @@ void signalSemaphore(int ownerEnvID, char* semaphoreName)
 {
 	//TODO: [PROJECT 2019 - MS1 - [4] Semaphore] SIGNAL
 	// your code is here, remove the panic and write your code
-	panic("signalSemaphore() is not implemented yet...!!");
+	//panic("signalSemaphore() is not implemented yet...!!");
 
 	// Steps:
 	//	1) Get the Semaphore
@@ -211,3 +228,4 @@ void signalSemaphore(int ownerEnvID, char* semaphoreName)
 	//		c) changing its status to ENV_READY
 
 }
+

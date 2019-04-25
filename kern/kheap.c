@@ -3,6 +3,7 @@
 #include <kern/memory_manager.h>
 
 //NOTE: All kernel heap allocations are multiples of PAGE_SIZE (4KB)
+
 struct allocated{
 	int counter;
 	uint32 *address;
@@ -18,8 +19,8 @@ void* kmalloc(unsigned int size)
 	int end; // Address of end allocation segment
 	int count = 0; // Temporary counter for pages number
 	int min = 999999999; //Best Fit size counter
-	int start=-1; // start address of allocated segment
-//	int bool = 0; //boolean to indicate if size needed
+	int start; // start address of allocated segment
+	int bool = 0; //boolean to indicate if size needed
 	int i;
 
 
@@ -39,7 +40,7 @@ void* kmalloc(unsigned int size)
 				end = i;
 				start = end - (count*PAGE_SIZE);
 				min = free_space;
-				//bool = 1;
+				bool = 1;
 		     }
 			free_space = 0;
 			count = 0;
@@ -51,18 +52,14 @@ void* kmalloc(unsigned int size)
 		end = i;
 		start = end - (count*PAGE_SIZE);
 		min = free_space;
-		//free_space = 0;
-		//count = 0;
-	//	bool = 1;
+		free_space = 0;
+		count = 0;
+		bool = 1;
 	}
 
-  //  if(bool==0){
-    //	return NULL;
-    //}
-
-	if(start==-1){
-		return NULL;
-	}
+    if(bool==0){
+    	return NULL;
+    }
 
     //save start address, allocated size
 	arr[index].address = (uint32*)start;
@@ -83,6 +80,7 @@ void* kmalloc(unsigned int size)
 	// use "isKHeapPlacementStrategyFIRSTFIT() ..." functions to check the current strategy
 	return (void *)start;
 }
+
 
 void kfree(void* virtual_address)
 {
@@ -112,34 +110,42 @@ void kfree(void* virtual_address)
 	arr[required_index].counter = -1;
 }
 
-unsigned int kheap_virtual_address(unsigned int physical_address)
-{
-	//TODO: [PROJECT 2019 - MS1 - [1] Kernel Heap] kheap_virtual_address()
-	// Write your code here, remove the panic and write your code
-	panic("kheap_virtual_address() is not implemented yet...!!");
-
-	//return the virtual address corresponding to given physical_address
-	//refer to the project presentation and documentation for details
-
-	//change this "return" according to your answer
-
-	return 0;
-}
-
 unsigned int kheap_physical_address(unsigned int virtual_address)
 {
-	//TODO: [PROJECT 2019 - MS1 - [1] Kernel Heap] kheap_physical_address()
-	// Write your code here, remove the panic and write your code
-	panic("kheap_physical_address() is not implemented yet...!!");
+	uint32 phy_address;
+	uint32 *ptr_page_table = NULL;
+	struct Frame_Info* ptr_frame_info = get_frame_info(ptr_page_directory, (void*)virtual_address, &ptr_page_table);
+	phy_address = to_physical_address(ptr_frame_info);
 
-	//return the physical address corresponding to given virtual_address
-	//refer to the project presentation and documentation for details
-
-	//change this "return" according to your answer
-
-	return 0;
+     uint32 presentbit=ptr_page_table[PTX(virtual_address)]& PERM_PRESENT;
+     if (presentbit==0)
+    	 return 0 ;
+	return phy_address;
 }
 
+unsigned int kheap_virtual_address(unsigned int physical_address)
+{
+	    uint32 b=1,present_bit;
+	    int frameNumber=physical_address/PAGE_SIZE;
+	    uint32 frame;
+
+		for (uint32 va=KERNEL_HEAP_START; va<KERNEL_HEAP_MAX; va += PAGE_SIZE)
+		    {
+		    	uint32 *page_table = NULL;
+		    	get_page_table(ptr_page_directory, (void *)va, &page_table);
+
+		    	uint32 presentbit=page_table[PTX((void*)va)]& PERM_PRESENT;
+
+		    	uint32 entry = page_table[PTX(va)];
+		    	frame=entry>>12;
+				  if (frame == frameNumber && (presentbit!=0 ))
+					  return va;
+		    }
+
+		    //not in kernal heap
+	      return 0;
+
+}
 
 //=================================================================================//
 //============================== BONUS FUNCTION ===================================//
@@ -161,5 +167,6 @@ void *krealloc(void *virtual_address, uint32 new_size)
 
 	return NULL;
 	panic("krealloc() is not implemented yet...!!");
+
 
 }
