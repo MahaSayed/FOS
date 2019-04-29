@@ -19,10 +19,11 @@ void* kmalloc(unsigned int size)
 	int end; // Address of end allocation segment
 	int count = 0; // Temporary counter for pages number
 	int min = 999999999; //Best Fit size counter
-
-	int start=-1; // start address of allocated segment
-
+	int start; // start address of allocated segment
+	int bool = 0; //boolean to indicate if size needed
 	int i;
+
+
 	for(i = KERNEL_HEAP_START; i < KERNEL_HEAP_MAX; i += PAGE_SIZE)
 	{
 		uint32 *ptr_page_table = NULL;
@@ -39,26 +40,30 @@ void* kmalloc(unsigned int size)
 				end = i;
 				start = end - (count*PAGE_SIZE);
 				min = free_space;
+				bool = 1;
 		     }
 			free_space = 0;
 			count = 0;
 		}
 	}
+
 	if(free_space >= size && free_space < min)
 	{
 		end = i;
 		start = end - (count*PAGE_SIZE);
 		min = free_space;
-
+		free_space = 0;
+		count = 0;
+		bool = 1;
 	}
-	if(start==-1){
-		return NULL;
-	}
 
+    if(bool==0){
+    	return NULL;
+    }
 
     //save start address, allocated size
 	arr[index].address = (uint32*)start;
-	arr[index].counter = ROUNDUP(size, PAGE_SIZE);
+	arr[index].counter = ROUNDUP(size, 4096);
 	index++;
 
     int end_address = start + size;
@@ -73,9 +78,9 @@ void* kmalloc(unsigned int size)
 	//TODO: [PROJECT 2019 - BONUS1] Implement the FIRST FIT strategy for Kernel allocation
 	// Beside the BEST FIT
 	// use "isKHeapPlacementStrategyFIRSTFIT() ..." functions to check the current strategy
-
 	return (void *)start;
 }
+
 
 void kfree(void* virtual_address)
 {
@@ -133,8 +138,11 @@ unsigned int kheap_virtual_address(unsigned int physical_address)
 
 		    	uint32 entry = page_table[PTX(va)];
 		    	frame=entry>>12;
-				  if (frame == frameNumber && (presentbit!=0 ))
-					  return va;
+		    	if (presentbit!=0 )
+		    			    	{
+		    			    		if (frame == frameNumber)
+		    			    			 return va;
+		    			    	}
 		    }
 
 		    //not in kernal heap
