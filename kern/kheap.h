@@ -12,7 +12,7 @@
 #define KHP_PLACE_NEXTFIT 	0x3
 #define KHP_PLACE_WORSTFIT 	0x4
 
-
+void* firstFit(unsigned int size);
 void* kmalloc(unsigned int size);
 void kfree(void* virtual_address);
 void *krealloc(void *virtual_address, uint32 new_size);
