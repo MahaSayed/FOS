@@ -549,7 +549,6 @@ void __page_fault_handler_with_buffering(struct Env * curenv, uint32 fault_va) {
 
 		uint32 *page_table_ptr = NULL;
 		struct Frame_Info *frame_info = get_frame_info(curenv->env_page_directory,(void*) victim_VA, &page_table_ptr);
-		//cprintf("Victim address = %x and index = %d", victim_VA, victim_index);
 
 		frame_info->environment = curenv;
 		frame_info->isBuffered = 1;
@@ -577,7 +576,6 @@ void __page_fault_handler_with_buffering(struct Env * curenv, uint32 fault_va) {
 		}
 		else
 			bufferList_add_page(&free_frame_list, frame_info);
-		//cprintf("Victim address = %x and index = %d and last index = %d\n", victim_VA, victim_index, curenv->page_last_WS_index);
 		placement(curenv, fault_va, victim_index, 1);
 	}
 	//TODO: [PROJECT 2019 - BONUS6] Change WS Size according to “Program Priority”
