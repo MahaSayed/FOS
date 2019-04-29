@@ -150,10 +150,6 @@ int free_semaphore_object(uint32 semaphoreObjectID)
 //==================================================================================//
 //============================ REQUIRED FUNCTIONS ==================================//
 //==================================================================================//
-
-//======================
-// [1] Create Semaphore:
-//======================
 struct Semaphore *NewSemaphore;
 
 int createSemaphore(int32 ownerEnvID, char* semaphoreName, uint32 initialValue)
@@ -186,17 +182,23 @@ int createSemaphore(int32 ownerEnvID, char* semaphoreName, uint32 initialValue)
 	//change this "return" according to your answer
 }
 
-//=== =========
+//============
 // [2] Wait():
 //============
 void waitSemaphore(int32 ownerEnvID, char* semaphoreName)
 {
 	//TODO: [PROJECT 2019 - MS1 - [4] Semaphore] WAIT
-	// your code is here, remove the panic and write your code
-	//panic("waitSemaphore() is not implemented yet...!!");
-
 	struct Env* myenv = curenv; //The calling environment
-
+     int value = get_semaphore_object_ID(ownerEnvID,semaphoreName);
+     value--;
+     if(value<0)
+     {
+    		sched_remove_ready(myenv);
+    		enqueue(&semaphores[ownerEnvID].env_queue,myenv);
+    		myenv->env_status=ENV_BLOCKED;
+    		curenv=NULL;
+    		fos_scheduler();
+     }
 	// Steps:
 	//	1) Get the Semaphore
 	//	2) Decrement its value
@@ -206,8 +208,6 @@ void waitSemaphore(int32 ownerEnvID, char* semaphoreName)
 	//		c) changing its status to ENV_BLOCKED
 	//		d) set curenv with NULL
 	//	4) Call "fos_scheduler()" to continue running the remaining envs
-
-
 }
 
 //==============
@@ -216,8 +216,16 @@ void waitSemaphore(int32 ownerEnvID, char* semaphoreName)
 void signalSemaphore(int ownerEnvID, char* semaphoreName)
 {
 	//TODO: [PROJECT 2019 - MS1 - [4] Semaphore] SIGNAL
-	// your code is here, remove the panic and write your code
-	//panic("signalSemaphore() is not implemented yet...!!");
+	struct Env* myenv = curenv; //The calling environment
+	     int value = get_semaphore_object_ID(ownerEnvID,semaphoreName);
+	     value++;
+	     if(value<=0)
+	     {
+	    	 struct Env* newenv;
+	    	newenv=dequeue(&semaphores[ownerEnvID].env_queue);
+	     sched_insert_ready(myenv);
+	      myenv->env_status=ENV_READY;
+	     }
 
 	// Steps:
 	//	1) Get the Semaphore
@@ -228,4 +236,3 @@ void signalSemaphore(int ownerEnvID, char* semaphoreName)
 	//		c) changing its status to ENV_READY
 
 }
-
